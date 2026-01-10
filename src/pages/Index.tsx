@@ -6,57 +6,79 @@ import AnalysisResult, { type AnalysisResultData } from "@/components/AnalysisRe
 import ShieldIcon from "@/components/ShieldIcon";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Shield, Zap, Eye } from "lucide-react";
-
-// Mock analysis result for demo (replace with actual API call)
-const mockAnalysis: AnalysisResultData = {
-  product: "GenStar",
-  used_services: ["Azure OpenAI", "Azure AI Vision", "Azure AI Speech", "Azure Machine Learning"],
-  risk_label: "High",
-  risk_score: 78,
-  manipulation_tags: ["urgency", "authority", "request_money"],
-  explanation: "This message uses urgency ('urgent'), authority (appears to come from your manager) and a direct request for money/OTP. These are classic social-engineering cues. The language pattern suggests AI-generated content designed to bypass typical security awareness.",
-  safe_rewrite: "Hi [Manager Name], I see your message — I will verify. Please call my direct number or confirm via company chat before I proceed with any transaction.",
-  next_actions: [
-    "Do not send OTP or money",
-    "Call the sender on the official number to verify",
-    "Report this message to IT Security"
-  ],
-  evidence: [
-    { source: "text", reason: "Contains urgent demand for money and OTP with authority claims", confidence: 85 },
-    { source: "ml", reason: "Azure ML flagged high urgency & request_money patterns", confidence: 72 },
-    { source: "vision", reason: "No image provided for analysis", confidence: 0 },
-  ],
-  meta: {
-    channel: "email",
-    sender_name: "Manager Name",
-    timestamp: new Date().toISOString()
-  }
-};
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResultData | null>(null);
   const [loadingStage, setLoadingStage] = useState<"scanning" | "analyzing" | "processing">("scanning");
+  const { toast } = useToast();
 
   const handleAnalyze = async (data: { text: string; channel: string; file: File | null }) => {
     setIsLoading(true);
     setResult(null);
     
-    // Simulate API stages
+    // Show loading stages
     setLoadingStage("scanning");
-    await new Promise(r => setTimeout(r, 1000));
-    setLoadingStage("analyzing");
-    await new Promise(r => setTimeout(r, 1500));
-    setLoadingStage("processing");
-    await new Promise(r => setTimeout(r, 1000));
     
-    // In production, this would call your backend API
-    // For demo, we return mock data with the user's channel
-    setResult({
-      ...mockAnalysis,
-      meta: { ...mockAnalysis.meta, channel: data.channel }
-    });
-    setIsLoading(false);
+    try {
+      // Determine media types
+      const hasImage = data.file?.type.startsWith('image/') || false;
+      const hasAudio = data.file?.type.startsWith('audio/') || false;
+      const hasVideo = data.file?.type.startsWith('video/') || false;
+
+      // Update loading stage
+      setTimeout(() => setLoadingStage("analyzing"), 800);
+      setTimeout(() => setLoadingStage("processing"), 2000);
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-threat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          text: data.text,
+          channel: data.channel,
+          hasImage,
+          hasAudio,
+          hasVideo,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (response.status === 429) {
+          toast({
+            variant: "destructive",
+            title: "Rate Limited",
+            description: "Too many requests. Please wait a moment and try again.",
+          });
+        } else if (response.status === 402) {
+          toast({
+            variant: "destructive",
+            title: "Usage Limit",
+            description: "AI usage limit reached. Please add credits to continue.",
+          });
+        } else {
+          throw new Error(errorData.error || "Analysis failed");
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      const analysisResult = await response.json();
+      setResult(analysisResult);
+    } catch (error) {
+      console.error("Analysis error:", error);
+      toast({
+        variant: "destructive",
+        title: "Analysis Failed",
+        description: error instanceof Error ? error.message : "An error occurred during analysis.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleReset = () => {
