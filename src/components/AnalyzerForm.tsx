@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Scan, Mail, MessageCircle, Phone, Send } from "lucide-react";
+import { useState, forwardRef } from "react";
+import { Scan, Mail, MessageCircle, Phone } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
@@ -11,7 +11,7 @@ interface AnalyzerFormProps {
   isLoading: boolean;
 }
 
-const AnalyzerForm = ({ onAnalyze, isLoading }: AnalyzerFormProps) => {
+const AnalyzerForm = forwardRef<HTMLFormElement, AnalyzerFormProps>(({ onAnalyze, isLoading }, ref) => {
   const [text, setText] = useState("");
   const [channel, setChannel] = useState("email");
   const [file, setFile] = useState<File | null>(null);
@@ -29,7 +29,7 @@ const AnalyzerForm = ({ onAnalyze, isLoading }: AnalyzerFormProps) => {
   ];
 
   return (
-    <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 space-y-6">
+    <form ref={ref} onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 space-y-6">
       <div className="flex items-center gap-3 mb-2">
         <div className="p-2 rounded-lg bg-primary/10">
           <Scan className="w-5 h-5 text-primary" />
@@ -113,6 +113,8 @@ const AnalyzerForm = ({ onAnalyze, isLoading }: AnalyzerFormProps) => {
       </p>
     </form>
   );
-};
+});
+
+AnalyzerForm.displayName = "AnalyzerForm";
 
 export default AnalyzerForm;

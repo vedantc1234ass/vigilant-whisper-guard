@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, forwardRef } from "react";
 import { Upload, Image, AudioLines, X, FileType } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,7 @@ interface FileUploadProps {
   selectedFile: File | null;
 }
 
-const FileUpload = ({ onFileSelect, selectedFile }: FileUploadProps) => {
+const FileUpload = forwardRef<HTMLDivElement, FileUploadProps>(({ onFileSelect, selectedFile }, ref) => {
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -57,7 +57,7 @@ const FileUpload = ({ onFileSelect, selectedFile }: FileUploadProps) => {
   const FileIcon = getFileIcon();
 
   return (
-    <div className="space-y-3">
+    <div ref={ref} className="space-y-3">
       <label className="text-sm font-medium text-foreground flex items-center gap-2">
         <Upload size={16} className="text-primary" />
         Upload Media (Optional)
@@ -131,6 +131,8 @@ const FileUpload = ({ onFileSelect, selectedFile }: FileUploadProps) => {
       </div>
     </div>
   );
-};
+});
+
+FileUpload.displayName = "FileUpload";
 
 export default FileUpload;
