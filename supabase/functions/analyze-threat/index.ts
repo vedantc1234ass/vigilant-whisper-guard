@@ -36,28 +36,46 @@ Detect:
 - AI-generated fluency with persuasive intent
 Classify as: Phishing, Scam, Social engineering, or Safe
 
-2️⃣ Fake Voices & AI-Generated Videos
+2️⃣ Fake Voices & AI-Generated Audio
 Detect:
-- Voice cloning artifacts
-- Lip-sync mismatch
-- Unnatural pauses or pitch patterns
-- Inconsistent facial micro-expressions
-Classify as: Voice deepfake, Video deepfake, or Authentic
+- Voice cloning artifacts (unnatural smoothness, robotic undertones)
+- Synthetic speech patterns
+- Unnatural pauses, pitch patterns, or cadence
+- Audio quality inconsistencies
+- TTS (text-to-speech) signatures
+Classify as: Voice deepfake/AI-generated, Voice cloning suspected, or Authentic human voice
 
-3️⃣ Deepfake Images
+3️⃣ Deepfake Videos
 Detect:
-- GAN artifacts
+- Lip-sync mismatches with audio
+- Unnatural facial movements or expressions
+- Blurring around face edges
+- Inconsistent lighting on face vs background
+- Eye blinking anomalies
+- Facial warping or morphing artifacts
+- Temporal inconsistencies between frames
+Classify as: Video deepfake, Manipulated video, or Authentic video
+
+4️⃣ Deepfake Images & AI-Generated Photos
+Detect:
+- GAN artifacts (grid patterns, noise patterns)
 - Lighting/shadow inconsistencies
 - Distorted facial symmetry
-- Metadata anomalies
+- Unnatural skin textures
+- Background anomalies near edges
+- Asymmetric earrings, glasses, or accessories
+- Warped text or logos
 Classify as: AI-generated image, Manipulated image, or Real image
 
-4️⃣ Clean, Trusted-Looking Links
+5️⃣ Clean, Trusted-Looking Links
 Detect:
-- Brand impersonation
-- Domain similarity attacks
+- Brand impersonation (paypa1.com vs paypal.com)
+- Domain similarity attacks (typosquatting)
 - Hidden redirects
-- Mismatch between link text and destination
+- Suspicious TLDs (.xyz, .tk, .ml for trusted brands)
+- Mismatch between link text and actual URL
+- URL shorteners hiding destination
+- Homograph attacks (using similar-looking characters)
 Classify as: Malicious, Suspicious, or Safe
 
 🤖 MICROSOFT AI SERVICES YOU ARE USING (EXPLICITLY)
@@ -76,17 +94,32 @@ Return results in this exact JSON structure:
   "used_services": ["Azure OpenAI", "Azure AI Vision", "Azure AI Speech", "Azure Machine Learning"],
   "risk_label": "Low" | "Medium" | "High" | "Inconclusive",
   "risk_score": 0-100,
-  "manipulation_tags": ["urgency", "authority", "personalization", "fear", "request_money", "implied_consequence", ...],
-  "explanation": "Simple, human-readable explanation of WHY this was flagged (2-4 sentences)",
+  "manipulation_tags": ["urgency", "authority", "personalization", "fear", "request_money", "implied_consequence", "deepfake", "voice_clone", "phishing_link", ...],
+  "explanation": "Simple, human-readable explanation of WHY this was flagged (2-4 sentences). If media was analyzed, EXPLICITLY state whether the person/voice appears to be REAL or DEEPFAKE/AI-GENERATED.",
   "safe_rewrite": "Short rewritten message that removes manipulation and includes verification steps",
   "next_actions": ["Recommended action 1", "Recommended action 2", "Recommended action 3"],
   "evidence": [
-    { "source": "text" | "vision" | "speech" | "ml", "reason": "One-line evidence reason", "confidence": 0-100 }
+    { "source": "text" | "vision" | "speech" | "ml" | "link", "reason": "One-line evidence reason", "confidence": 0-100 }
   ],
+  "deepfake_analysis": {
+    "contains_person": true | false,
+    "is_deepfake": true | false | null,
+    "deepfake_confidence": 0-100,
+    "deepfake_type": "face_swap" | "lip_sync" | "full_synthetic" | "voice_clone" | "none" | null,
+    "artifacts_found": ["list of specific artifacts detected"],
+    "person_assessment": "Detailed assessment of the person - are they real or AI-generated?"
+  },
+  "link_analysis": {
+    "urls_found": ["list of URLs extracted"],
+    "suspicious_urls": ["list of suspicious URLs with reasons"],
+    "brand_impersonation": true | false,
+    "typosquatting_detected": true | false
+  },
   "meta": {
     "channel": "email" | "chat" | "voice" | "sms" | "other",
     "sender_name": "string or null",
-    "timestamp": "ISO8601 or null"
+    "timestamp": "ISO8601 or null",
+    "media_analyzed": ["image" | "video" | "audio"]
   }
 }
 
@@ -99,6 +132,13 @@ Return results in this exact JSON structure:
 🎯 PRIMARY GOAL
 Protect users from next-generation AI-powered cyber attacks that look real, trusted, and human — before damage occurs.
 
+🎯 CRITICAL FOR DEEPFAKE DETECTION
+When analyzing images, videos, or audio of people:
+1. ALWAYS explicitly state if the person appears REAL or AI-GENERATED/DEEPFAKE
+2. List specific visual or audio artifacts that led to your conclusion
+3. Assign a confidence score to your deepfake assessment
+4. If unsure, say "Inconclusive" and explain what additional verification is needed
+
 IMPORTANT: Return ONLY valid JSON. No markdown, no code blocks, no additional text.`;
 
 serve(async (req) => {
@@ -107,18 +147,36 @@ serve(async (req) => {
   }
 
   try {
-    const { text, channel, hasImage, hasAudio, hasVideo, imageBase64 } = await req.json();
+    const { text, channel, hasImage, hasAudio, hasVideo, imageBase64, audioBase64, videoBase64 } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Extract URLs from text for link analysis
+    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.(com|org|net|io|co|xyz|tk|ml|ga|cf|info|biz|online|site|app|dev)[^\s]*)/gi;
+    const extractedUrls = text ? text.match(urlRegex) || [] : [];
+
     // Build context about what media was provided
     let mediaContext = "";
-    if (hasImage) mediaContext += "\n[User uploaded an IMAGE for deepfake/manipulation analysis - ANALYZE IT CAREFULLY]";
-    if (hasAudio) mediaContext += "\n[User uploaded AUDIO for voice cloning analysis]";
-    if (hasVideo) mediaContext += "\n[User uploaded VIDEO for deepfake analysis]";
+    const mediaAnalyzed: string[] = [];
+    
+    if (hasImage) {
+      mediaContext += "\n[IMAGE PROVIDED - Analyze for deepfake artifacts, GAN patterns, facial anomalies, and AI generation signs. EXPLICITLY state if the person is REAL or DEEPFAKE.]";
+      mediaAnalyzed.push("image");
+    }
+    if (hasAudio) {
+      mediaContext += "\n[AUDIO PROVIDED - Analyze for voice cloning, synthetic speech, TTS artifacts, and unnatural patterns. EXPLICITLY state if the voice is REAL or AI-GENERATED.]";
+      mediaAnalyzed.push("audio");
+    }
+    if (hasVideo) {
+      mediaContext += "\n[VIDEO PROVIDED - Analyze for lip-sync issues, facial movement anomalies, deepfake artifacts, and AI generation. EXPLICITLY state if the person is REAL or DEEPFAKE.]";
+      mediaAnalyzed.push("video");
+    }
+    if (extractedUrls.length > 0) {
+      mediaContext += `\n[URLS DETECTED - Analyze these URLs for phishing, typosquatting, and brand impersonation: ${extractedUrls.join(", ")}]`;
+    }
 
     const textPrompt = `Analyze this ${channel} message for threats:
 
@@ -128,22 +186,37 @@ ${text || "[No text provided]"}
 Channel: ${channel}
 ${mediaContext}
 
-${hasImage ? "IMPORTANT: An image has been provided. Analyze it for deepfake artifacts, GAN artifacts, lighting inconsistencies, facial distortions, and any signs of AI manipulation or editing." : ""}
+${hasImage ? "🔍 IMAGE ANALYSIS REQUIRED: Look for deepfake artifacts, unnatural facial features, GAN patterns, lighting inconsistencies. Tell me if the person is REAL or FAKE." : ""}
+${hasAudio ? "🔍 AUDIO ANALYSIS REQUIRED: Listen for voice cloning artifacts, synthetic speech patterns, unnatural cadence. Tell me if the voice is REAL or AI-GENERATED." : ""}
+${hasVideo ? "🔍 VIDEO ANALYSIS REQUIRED: Check for lip-sync issues, facial warping, temporal inconsistencies. Tell me if the person is REAL or DEEPFAKE." : ""}
+${extractedUrls.length > 0 ? `🔍 LINK ANALYSIS REQUIRED: Check these URLs for phishing attempts: ${extractedUrls.join(", ")}` : ""}
 
-Analyze this content and return your threat assessment as JSON.`;
+Analyze this content thoroughly and return your threat assessment as JSON. Be EXPLICIT about whether any person/voice is real or AI-generated.`;
 
-    // Build message content - multimodal if image is present
-    let userContent: any;
+    // Build message content - multimodal if media is present
+    const contentParts: any[] = [{ type: "text", text: textPrompt }];
+    
     if (imageBase64) {
-      userContent = [
-        { type: "text", text: textPrompt },
-        { 
-          type: "image_url", 
-          image_url: { url: imageBase64 } 
-        }
-      ];
-    } else {
-      userContent = textPrompt;
+      contentParts.push({ 
+        type: "image_url", 
+        image_url: { url: imageBase64 } 
+      });
+    }
+    
+    if (videoBase64) {
+      // For video, we send it as a video type or as image frames
+      contentParts.push({ 
+        type: "image_url", 
+        image_url: { url: videoBase64 } 
+      });
+    }
+    
+    if (audioBase64) {
+      // Add audio context - note: actual audio analysis depends on model support
+      contentParts.push({ 
+        type: "image_url", 
+        image_url: { url: audioBase64 } 
+      });
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -156,7 +229,7 @@ Analyze this content and return your threat assessment as JSON.`;
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: GENSTAR_SYSTEM_PROMPT },
-          { role: "user", content: userContent },
+          { role: "user", content: contentParts },
         ],
       }),
     });
@@ -213,7 +286,21 @@ Analyze this content and return your threat assessment as JSON.`;
         safe_rewrite: "Unable to generate safe rewrite. Please verify this message through official channels.",
         next_actions: ["Verify sender through official channels", "Do not click any links", "Report if suspicious"],
         evidence: [{ source: "text", reason: "Analysis completed with limited confidence", confidence: 50 }],
-        meta: { channel, sender_name: null, timestamp: new Date().toISOString() }
+        deepfake_analysis: {
+          contains_person: false,
+          is_deepfake: null,
+          deepfake_confidence: 0,
+          deepfake_type: null,
+          artifacts_found: [],
+          person_assessment: "Unable to determine"
+        },
+        link_analysis: {
+          urls_found: extractedUrls,
+          suspicious_urls: [],
+          brand_impersonation: false,
+          typosquatting_detected: false
+        },
+        meta: { channel, sender_name: null, timestamp: new Date().toISOString(), media_analyzed: mediaAnalyzed }
       };
     }
 
@@ -223,8 +310,31 @@ Analyze this content and return your threat assessment as JSON.`;
     analysisResult.meta = {
       ...analysisResult.meta,
       channel,
-      timestamp: analysisResult.meta?.timestamp || new Date().toISOString()
+      timestamp: analysisResult.meta?.timestamp || new Date().toISOString(),
+      media_analyzed: mediaAnalyzed
     };
+    
+    // Ensure deepfake_analysis exists
+    if (!analysisResult.deepfake_analysis) {
+      analysisResult.deepfake_analysis = {
+        contains_person: false,
+        is_deepfake: null,
+        deepfake_confidence: 0,
+        deepfake_type: null,
+        artifacts_found: [],
+        person_assessment: "No media analyzed"
+      };
+    }
+    
+    // Ensure link_analysis exists
+    if (!analysisResult.link_analysis) {
+      analysisResult.link_analysis = {
+        urls_found: extractedUrls,
+        suspicious_urls: [],
+        brand_impersonation: false,
+        typosquatting_detected: false
+      };
+    }
 
     return new Response(JSON.stringify(analysisResult), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
