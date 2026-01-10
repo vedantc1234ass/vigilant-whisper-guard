@@ -1,4 +1,4 @@
-import { useState, forwardRef } from "react";
+import { useState } from "react";
 import { Scan, Mail, MessageCircle, Phone } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
@@ -11,7 +11,7 @@ interface AnalyzerFormProps {
   isLoading: boolean;
 }
 
-const AnalyzerForm = forwardRef<HTMLFormElement, AnalyzerFormProps>(({ onAnalyze, isLoading }, ref) => {
+const AnalyzerForm = ({ onAnalyze, isLoading }: AnalyzerFormProps) => {
   const [text, setText] = useState("");
   const [channel, setChannel] = useState("email");
   const [file, setFile] = useState<File | null>(null);
@@ -29,7 +29,7 @@ const AnalyzerForm = forwardRef<HTMLFormElement, AnalyzerFormProps>(({ onAnalyze
   ];
 
   return (
-    <form ref={ref} onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 space-y-6">
+    <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 space-y-6">
       <div className="flex items-center gap-3 mb-2">
         <div className="p-2 rounded-lg bg-primary/10">
           <Scan className="w-5 h-5 text-primary" />
@@ -53,16 +53,19 @@ const AnalyzerForm = forwardRef<HTMLFormElement, AnalyzerFormProps>(({ onAnalyze
           onValueChange={(v) => v && setChannel(v)}
           className="justify-start gap-2"
         >
-          {channels.map((ch) => (
-            <ToggleGroupItem
-              key={ch.value}
-              value={ch.value}
-              className="data-[state=on]:bg-primary/20 data-[state=on]:text-primary data-[state=on]:border-primary/50 border border-border/50 px-4"
-            >
-              <ch.icon size={16} className="mr-2" />
-              {ch.label}
-            </ToggleGroupItem>
-          ))}
+          {channels.map((ch) => {
+            const IconComponent = ch.icon;
+            return (
+              <ToggleGroupItem
+                key={ch.value}
+                value={ch.value}
+                className="data-[state=on]:bg-primary/20 data-[state=on]:text-primary data-[state=on]:border-primary/50 border border-border/50 px-4"
+              >
+                <IconComponent size={16} className="mr-2" />
+                {ch.label}
+              </ToggleGroupItem>
+            );
+          })}
         </ToggleGroup>
       </div>
 
@@ -113,8 +116,6 @@ const AnalyzerForm = forwardRef<HTMLFormElement, AnalyzerFormProps>(({ onAnalyze
       </p>
     </form>
   );
-});
-
-AnalyzerForm.displayName = "AnalyzerForm";
+};
 
 export default AnalyzerForm;
