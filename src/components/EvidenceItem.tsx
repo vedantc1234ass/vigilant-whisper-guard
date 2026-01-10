@@ -1,8 +1,8 @@
-import { Brain, Eye, AudioLines, Cpu, MessageSquare } from "lucide-react";
+import { Brain, Eye, AudioLines, Cpu, MessageSquare, Link } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Evidence {
-  source: "text" | "vision" | "speech" | "ml";
+  source: "text" | "vision" | "speech" | "ml" | "link";
   reason: string;
   confidence: number;
 }
@@ -16,6 +16,7 @@ const sourceConfig = {
   vision: { icon: Eye, label: "Vision AI", color: "text-cyan-400" },
   speech: { icon: AudioLines, label: "Speech AI", color: "text-violet-400" },
   ml: { icon: Cpu, label: "ML Scoring", color: "text-emerald-400" },
+  link: { icon: Link, label: "Link Analysis", color: "text-warning" },
 };
 
 const EvidenceItem = ({ evidence }: EvidenceItemProps) => {

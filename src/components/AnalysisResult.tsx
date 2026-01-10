@@ -1,7 +1,23 @@
-import { CheckCircle, AlertCircle, Shield, Sparkles, ListChecks } from "lucide-react";
+import { CheckCircle, AlertCircle, Shield, Sparkles, ListChecks, User, Link, Video, Mic } from "lucide-react";
 import RiskBadge from "./RiskBadge";
 import EvidenceItem from "./EvidenceItem";
 import { Badge } from "./ui/badge";
+
+interface DeepfakeAnalysis {
+  contains_person: boolean;
+  is_deepfake: boolean | null;
+  deepfake_confidence: number;
+  deepfake_type: string | null;
+  artifacts_found: string[];
+  person_assessment: string;
+}
+
+interface LinkAnalysis {
+  urls_found: string[];
+  suspicious_urls: string[];
+  brand_impersonation: boolean;
+  typosquatting_detected: boolean;
+}
 
 interface AnalysisResultData {
   product: string;
@@ -13,14 +29,17 @@ interface AnalysisResultData {
   safe_rewrite: string;
   next_actions: string[];
   evidence: Array<{
-    source: "text" | "vision" | "speech" | "ml";
+    source: "text" | "vision" | "speech" | "ml" | "link";
     reason: string;
     confidence: number;
   }>;
+  deepfake_analysis?: DeepfakeAnalysis;
+  link_analysis?: LinkAnalysis;
   meta: {
     channel: string;
     sender_name: string | null;
     timestamp: string | null;
+    media_analyzed?: string[];
   };
 }
 
@@ -29,6 +48,12 @@ interface AnalysisResultProps {
 }
 
 const AnalysisResult = ({ data }: AnalysisResultProps) => {
+  const hasDeepfakeAnalysis = data.deepfake_analysis?.contains_person || 
+    (data.deepfake_analysis?.is_deepfake !== null && data.deepfake_analysis?.is_deepfake !== undefined);
+  
+  const hasLinkAnalysis = data.link_analysis && 
+    (data.link_analysis.urls_found.length > 0 || data.link_analysis.suspicious_urls.length > 0);
+
   return (
     <div className="space-y-6 fade-in">
       {/* Header with Risk Badge */}
@@ -45,6 +70,24 @@ const AnalysisResult = ({ data }: AnalysisResultProps) => {
           </div>
           <RiskBadge level={data.risk_label} score={data.risk_score} size="lg" />
         </div>
+
+        {/* Media Analyzed Tags */}
+        {data.meta.media_analyzed && data.meta.media_analyzed.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {data.meta.media_analyzed.map((media, i) => (
+              <Badge 
+                key={i} 
+                variant="outline" 
+                className="border-cyan-400/30 text-cyan-400 bg-cyan-400/5"
+              >
+                {media === 'image' && <User className="w-3 h-3 mr-1" />}
+                {media === 'video' && <Video className="w-3 h-3 mr-1" />}
+                {media === 'audio' && <Mic className="w-3 h-3 mr-1" />}
+                {media} analyzed
+              </Badge>
+            ))}
+          </div>
+        )}
 
         {/* Manipulation Tags */}
         {data.manipulation_tags.length > 0 && (
@@ -75,6 +118,122 @@ const AnalysisResult = ({ data }: AnalysisResultProps) => {
           ))}
         </div>
       </div>
+
+      {/* Deepfake Analysis Section */}
+      {hasDeepfakeAnalysis && data.deepfake_analysis && (
+        <div className={`glass-card rounded-2xl p-6 ${
+          data.deepfake_analysis.is_deepfake 
+            ? 'border-2 border-destructive/50 bg-destructive/5' 
+            : 'border-2 border-success/50 bg-success/5'
+        }`}>
+          <div className="flex items-center gap-2 mb-4">
+            <User className={`w-5 h-5 ${data.deepfake_analysis.is_deepfake ? 'text-destructive' : 'text-success'}`} />
+            <h3 className="text-lg font-semibold text-foreground">
+              🎭 Deepfake Detection Result
+            </h3>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
+            <div className={`p-4 rounded-xl ${
+              data.deepfake_analysis.is_deepfake 
+                ? 'bg-destructive/10 border border-destructive/30' 
+                : 'bg-success/10 border border-success/30'
+            }`}>
+              <p className="text-sm text-muted-foreground mb-1">Person Detection</p>
+              <p className={`text-2xl font-bold ${
+                data.deepfake_analysis.is_deepfake ? 'text-destructive' : 'text-success'
+              }`}>
+                {data.deepfake_analysis.is_deepfake ? '⚠️ DEEPFAKE DETECTED' : '✅ APPEARS AUTHENTIC'}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Confidence: {data.deepfake_analysis.deepfake_confidence}%
+              </p>
+            </div>
+            
+            {data.deepfake_analysis.deepfake_type && (
+              <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
+                <p className="text-sm text-muted-foreground mb-1">Deepfake Type</p>
+                <p className="text-lg font-semibold text-foreground capitalize">
+                  {data.deepfake_analysis.deepfake_type.replace(/_/g, ' ')}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="bg-background/50 rounded-xl p-4 mb-4">
+            <p className="text-sm text-muted-foreground mb-1">Assessment</p>
+            <p className="text-foreground">{data.deepfake_analysis.person_assessment}</p>
+          </div>
+
+          {data.deepfake_analysis.artifacts_found && data.deepfake_analysis.artifacts_found.length > 0 && (
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">Artifacts Detected:</p>
+              <div className="flex flex-wrap gap-2">
+                {data.deepfake_analysis.artifacts_found.map((artifact, i) => (
+                  <Badge key={i} variant="outline" className="border-warning/30 text-warning bg-warning/5">
+                    {artifact}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Link Analysis Section */}
+      {hasLinkAnalysis && data.link_analysis && (
+        <div className={`glass-card rounded-2xl p-6 ${
+          data.link_analysis.suspicious_urls.length > 0 
+            ? 'border-2 border-warning/50 bg-warning/5' 
+            : 'border-2 border-success/50 bg-success/5'
+        }`}>
+          <div className="flex items-center gap-2 mb-4">
+            <Link className={`w-5 h-5 ${
+              data.link_analysis.suspicious_urls.length > 0 ? 'text-warning' : 'text-success'
+            }`} />
+            <h3 className="text-lg font-semibold text-foreground">
+              🔗 Link Analysis
+            </h3>
+          </div>
+
+          <div className="space-y-4">
+            {data.link_analysis.urls_found.length > 0 && (
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">URLs Found ({data.link_analysis.urls_found.length}):</p>
+                <div className="space-y-2">
+                  {data.link_analysis.urls_found.map((url, i) => (
+                    <div key={i} className="bg-background/50 rounded-lg p-2 text-sm font-mono text-foreground/80 break-all">
+                      {url}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {data.link_analysis.suspicious_urls.length > 0 && (
+              <div>
+                <p className="text-sm text-destructive font-semibold mb-2">⚠️ Suspicious URLs:</p>
+                <div className="space-y-2">
+                  {data.link_analysis.suspicious_urls.map((url, i) => (
+                    <div key={i} className="bg-destructive/10 border border-destructive/30 rounded-lg p-2 text-sm text-destructive break-all">
+                      {url}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-4">
+              {data.link_analysis.brand_impersonation && (
+                <Badge variant="destructive">Brand Impersonation Detected</Badge>
+              )}
+              {data.link_analysis.typosquatting_detected && (
+                <Badge variant="destructive">Typosquatting Detected</Badge>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Explanation Section */}
       <div className="glass-card rounded-2xl p-6">

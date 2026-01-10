@@ -27,15 +27,22 @@ const Index = () => {
       const hasAudio = data.file?.type.startsWith('audio/') || false;
       const hasVideo = data.file?.type.startsWith('video/') || false;
 
-      // Convert image to base64 if present
+      // Convert file to base64 if present
       let imageBase64: string | null = null;
-      if (hasImage && data.file) {
-        imageBase64 = await new Promise<string>((resolve, reject) => {
+      let audioBase64: string | null = null;
+      let videoBase64: string | null = null;
+
+      if (data.file) {
+        const base64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result as string);
           reader.onerror = reject;
           reader.readAsDataURL(data.file!);
         });
+
+        if (hasImage) imageBase64 = base64;
+        if (hasAudio) audioBase64 = base64;
+        if (hasVideo) videoBase64 = base64;
       }
 
       // Update loading stage
@@ -55,6 +62,8 @@ const Index = () => {
           hasAudio,
           hasVideo,
           imageBase64,
+          audioBase64,
+          videoBase64,
         }),
       });
 
