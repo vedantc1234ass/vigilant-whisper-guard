@@ -4,6 +4,7 @@ import AnalyzerForm from "@/components/AnalyzerForm";
 import LoadingState from "@/components/LoadingState";
 import AnalysisResult, { type AnalysisResultData } from "@/components/AnalysisResult";
 import ShieldIcon from "@/components/ShieldIcon";
+import ChatBot from "@/components/ChatBot";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Shield, Zap, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -174,11 +175,13 @@ const Index = () => {
         <footer className="text-center mt-16 text-sm text-muted-foreground">
           <p>Microsoft Imagine Cup 2026 • GenStar MVP Demo</p>
           <p className="text-xs mt-2 opacity-70">
-            This is a demo. Connect to Azure services for full functionality.
-          </p>
-        </footer>
-      </main>
-    </div>
+          This is a demo. Connect to Azure services for full functionality.
+        </p>
+      </footer>
+    </main>
+    
+    <ChatBot />
+  </div>
   );
 };
 
