@@ -107,7 +107,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, channel, hasImage, hasAudio, hasVideo } = await req.json();
+    const { text, channel, hasImage, hasAudio, hasVideo, imageBase64 } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -116,11 +116,11 @@ serve(async (req) => {
 
     // Build context about what media was provided
     let mediaContext = "";
-    if (hasImage) mediaContext += "\n[User uploaded an IMAGE for analysis]";
-    if (hasAudio) mediaContext += "\n[User uploaded AUDIO for analysis]";
-    if (hasVideo) mediaContext += "\n[User uploaded VIDEO for analysis]";
+    if (hasImage) mediaContext += "\n[User uploaded an IMAGE for deepfake/manipulation analysis - ANALYZE IT CAREFULLY]";
+    if (hasAudio) mediaContext += "\n[User uploaded AUDIO for voice cloning analysis]";
+    if (hasVideo) mediaContext += "\n[User uploaded VIDEO for deepfake analysis]";
 
-    const userMessage = `Analyze this ${channel} message for threats:
+    const textPrompt = `Analyze this ${channel} message for threats:
 
 Message Content:
 ${text || "[No text provided]"}
@@ -128,7 +128,23 @@ ${text || "[No text provided]"}
 Channel: ${channel}
 ${mediaContext}
 
+${hasImage ? "IMPORTANT: An image has been provided. Analyze it for deepfake artifacts, GAN artifacts, lighting inconsistencies, facial distortions, and any signs of AI manipulation or editing." : ""}
+
 Analyze this content and return your threat assessment as JSON.`;
+
+    // Build message content - multimodal if image is present
+    let userContent: any;
+    if (imageBase64) {
+      userContent = [
+        { type: "text", text: textPrompt },
+        { 
+          type: "image_url", 
+          image_url: { url: imageBase64 } 
+        }
+      ];
+    } else {
+      userContent = textPrompt;
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -140,7 +156,7 @@ Analyze this content and return your threat assessment as JSON.`;
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: GENSTAR_SYSTEM_PROMPT },
-          { role: "user", content: userMessage },
+          { role: "user", content: userContent },
         ],
       }),
     });
