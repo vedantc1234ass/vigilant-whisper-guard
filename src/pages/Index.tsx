@@ -27,6 +27,17 @@ const Index = () => {
       const hasAudio = data.file?.type.startsWith('audio/') || false;
       const hasVideo = data.file?.type.startsWith('video/') || false;
 
+      // Convert image to base64 if present
+      let imageBase64: string | null = null;
+      if (hasImage && data.file) {
+        imageBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(data.file!);
+        });
+      }
+
       // Update loading stage
       setTimeout(() => setLoadingStage("analyzing"), 800);
       setTimeout(() => setLoadingStage("processing"), 2000);
@@ -43,6 +54,7 @@ const Index = () => {
           hasImage,
           hasAudio,
           hasVideo,
+          imageBase64,
         }),
       });
 
