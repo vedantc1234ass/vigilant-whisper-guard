@@ -2,33 +2,35 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import AnalyzerForm from "@/components/AnalyzerForm";
 import LoadingState from "@/components/LoadingState";
-import AnalysisResult, { type AnalysisResultData } from "@/components/AnalysisResult";
+import RiskScoreGauge from "@/components/RiskScoreGauge";
+import AIExplanationPanel from "@/components/AIExplanationPanel";
+import ThreatDashboard from "@/components/ThreatDashboard";
 import ShieldIcon from "@/components/ShieldIcon";
 import ChatBot from "@/components/ChatBot";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Shield, Zap, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sparkles, Shield, Zap, Eye, ArrowLeft, LayoutDashboard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import type { AnalysisResultData } from "@/components/AnalysisResult";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<AnalysisResultData | null>(null);
+  const [history, setHistory] = useState<AnalysisResultData[]>([]);
   const [loadingStage, setLoadingStage] = useState<"scanning" | "analyzing" | "processing">("scanning");
+  const [view, setView] = useState<"analyzer" | "dashboard">("analyzer");
   const { toast } = useToast();
 
   const handleAnalyze = async (data: { text: string; channel: string; file: File | null }) => {
     setIsLoading(true);
     setResult(null);
-    
-    // Show loading stages
     setLoadingStage("scanning");
-    
+
     try {
-      // Determine media types
       const hasImage = data.file?.type.startsWith('image/') || false;
       const hasAudio = data.file?.type.startsWith('audio/') || false;
       const hasVideo = data.file?.type.startsWith('video/') || false;
 
-      // Convert file to base64 if present
       let imageBase64: string | null = null;
       let audioBase64: string | null = null;
       let videoBase64: string | null = null;
@@ -40,13 +42,11 @@ const Index = () => {
           reader.onerror = reject;
           reader.readAsDataURL(data.file!);
         });
-
         if (hasImage) imageBase64 = base64;
         if (hasAudio) audioBase64 = base64;
         if (hasVideo) videoBase64 = base64;
       }
 
-      // Update loading stage
       setTimeout(() => setLoadingStage("analyzing"), 800);
       setTimeout(() => setLoadingStage("processing"), 2000);
 
@@ -71,17 +71,9 @@ const Index = () => {
       if (!response.ok) {
         const errorData = await response.json();
         if (response.status === 429) {
-          toast({
-            variant: "destructive",
-            title: "Rate Limited",
-            description: "Too many requests. Please wait a moment and try again.",
-          });
+          toast({ variant: "destructive", title: "Rate Limited", description: "Too many requests. Please wait a moment and try again." });
         } else if (response.status === 402) {
-          toast({
-            variant: "destructive",
-            title: "Usage Limit",
-            description: "AI usage limit reached. Please add credits to continue.",
-          });
+          toast({ variant: "destructive", title: "Usage Limit", description: "AI usage limit reached. Please add credits to continue." });
         } else {
           throw new Error(errorData.error || "Analysis failed");
         }
@@ -91,6 +83,7 @@ const Index = () => {
 
       const analysisResult = await response.json();
       setResult(analysisResult);
+      setHistory((prev) => [...prev, analysisResult]);
     } catch (error) {
       console.error("Analysis error:", error);
       toast({
@@ -103,85 +96,188 @@ const Index = () => {
     }
   };
 
-  const handleReset = () => {
-    setResult(null);
-  };
+  const handleReset = () => setResult(null);
 
   return (
     <div className="min-h-screen cyber-bg circuit-pattern">
       <Header />
-      
-      <main className="container mx-auto px-4 pt-24 pb-16">
-        {/* Hero Section */}
-        {!result && !isLoading && (
-          <div className="text-center mb-12 fade-in">
-            <div className="flex justify-center mb-6">
-              <ShieldIcon animated size={80} />
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 tracking-tight">
-              AI-Powered Threat Detection
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">
-              Detect targeted phishing, social engineering, and deepfake impersonation 
-              with advanced Microsoft AI services.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5 px-4 py-1.5">
-                <Sparkles className="w-3 h-3 mr-1" />
-                Azure OpenAI
-              </Badge>
-              <Badge variant="outline" className="border-cyan-400/30 text-cyan-400 bg-cyan-400/5 px-4 py-1.5">
-                <Eye className="w-3 h-3 mr-1" />
-                AI Vision
-              </Badge>
-              <Badge variant="outline" className="border-violet-400/30 text-violet-400 bg-violet-400/5 px-4 py-1.5">
-                <Zap className="w-3 h-3 mr-1" />
-                AI Speech
-              </Badge>
-              <Badge variant="outline" className="border-emerald-400/30 text-emerald-400 bg-emerald-400/5 px-4 py-1.5">
-                <Shield className="w-3 h-3 mr-1" />
-                Azure ML
-              </Badge>
-            </div>
+
+      <main className="container mx-auto px-4 pt-20 pb-16">
+        {/* Top Bar with View Toggle */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            {result && (
+              <Button variant="cyber-ghost" size="sm" onClick={handleReset}>
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                New Scan
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={view === "analyzer" ? "cyber-outline" : "cyber-ghost"}
+              size="sm"
+              onClick={() => { setView("analyzer"); setResult(null); }}
+            >
+              <Shield className="w-4 h-4 mr-1" />
+              Analyzer
+            </Button>
+            <Button
+              variant={view === "dashboard" ? "cyber-outline" : "cyber-ghost"}
+              size="sm"
+              onClick={() => setView("dashboard")}
+            >
+              <LayoutDashboard className="w-4 h-4 mr-1" />
+              Dashboard
+              {history.length > 0 && (
+                <span className="ml-1.5 text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-mono">
+                  {history.length}
+                </span>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Dashboard View */}
+        {view === "dashboard" && (
+          <div className="max-w-4xl mx-auto">
+            {history.length === 0 ? (
+              <div className="glass-card rounded-2xl p-12 text-center">
+                <LayoutDashboard className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">No Scans Yet</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Run your first threat analysis to populate the dashboard.
+                </p>
+                <Button variant="cyber" onClick={() => setView("analyzer")}>
+                  Start Scanning
+                </Button>
+              </div>
+            ) : (
+              <ThreatDashboard history={history} />
+            )}
           </div>
         )}
 
-        {/* Main Content */}
-        <div className="max-w-3xl mx-auto">
-          {!result && !isLoading && (
-            <AnalyzerForm onAnalyze={handleAnalyze} isLoading={isLoading} />
-          )}
-
-          {isLoading && (
-            <LoadingState stage={loadingStage} />
-          )}
-
-          {result && !isLoading && (
-            <div className="space-y-6">
-              <AnalysisResult data={result} />
-              <div className="text-center">
-                <button
-                  onClick={handleReset}
-                  className="text-primary hover:text-primary/80 underline underline-offset-4 text-sm transition-colors"
-                >
-                  Analyze another message
-                </button>
+        {/* Analyzer View */}
+        {view === "analyzer" && (
+          <>
+            {/* Hero */}
+            {!result && !isLoading && (
+              <div className="text-center mb-10 fade-in">
+                <div className="flex justify-center mb-5">
+                  <ShieldIcon animated size={72} />
+                </div>
+                <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-3 tracking-tight">
+                  AI-Powered Threat Detection
+                </h1>
+                <p className="text-base text-muted-foreground max-w-2xl mx-auto mb-5">
+                  Detect targeted phishing, social engineering, and deepfake impersonation
+                  with advanced AI analysis.
+                </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5 px-3 py-1">
+                    <Sparkles className="w-3 h-3 mr-1" /> AI Analysis
+                  </Badge>
+                  <Badge variant="outline" className="border-cyan-400/30 text-cyan-400 bg-cyan-400/5 px-3 py-1">
+                    <Eye className="w-3 h-3 mr-1" /> Vision AI
+                  </Badge>
+                  <Badge variant="outline" className="border-violet-400/30 text-violet-400 bg-violet-400/5 px-3 py-1">
+                    <Zap className="w-3 h-3 mr-1" /> Speech AI
+                  </Badge>
+                  <Badge variant="outline" className="border-emerald-400/30 text-emerald-400 bg-emerald-400/5 px-3 py-1">
+                    <Shield className="w-3 h-3 mr-1" /> ML Scoring
+                  </Badge>
+                </div>
               </div>
+            )}
+
+            {/* Analyzer Form */}
+            <div className="max-w-3xl mx-auto">
+              {!result && !isLoading && (
+                <AnalyzerForm onAnalyze={handleAnalyze} isLoading={isLoading} />
+              )}
+
+              {isLoading && <LoadingState stage={loadingStage} />}
+
+              {/* Analysis Result - New Dashboard Layout */}
+              {result && !isLoading && (
+                <div className="space-y-6 fade-in">
+                  {/* Result Header with Gauge */}
+                  <div className="glass-card rounded-2xl p-6 border border-border/30">
+                    <div className="flex flex-col md:flex-row items-center gap-6">
+                      {/* Risk Gauge */}
+                      <RiskScoreGauge score={result.risk_score} label={result.risk_label} />
+
+                      {/* Summary */}
+                      <div className="flex-1 text-center md:text-left">
+                        <h2 className="text-xl font-bold text-foreground mb-1">
+                          {result.product} Analysis Complete
+                        </h2>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Channel: {result.meta.channel} • {result.meta.sender_name || "Unknown sender"}
+                        </p>
+
+                        {/* Media Tags */}
+                        {result.meta.media_analyzed && result.meta.media_analyzed.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mb-3 justify-center md:justify-start">
+                            {result.meta.media_analyzed.map((media, i) => (
+                              <Badge
+                                key={i}
+                                variant="outline"
+                                className="border-primary/30 text-primary bg-primary/5 text-[11px]"
+                              >
+                                {media} analyzed
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* AI Services */}
+                        <div className="flex flex-wrap gap-1.5 justify-center md:justify-start">
+                          {result.used_services.map((service, i) => (
+                            <Badge
+                              key={i}
+                              variant="secondary"
+                              className="bg-primary/10 text-primary border-primary/20 text-[11px]"
+                            >
+                              <Sparkles className="w-3 h-3 mr-1" />
+                              {service}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AI Explanation Panel */}
+                  <AIExplanationPanel data={result} />
+
+                  {/* Reset Link */}
+                  <div className="text-center pt-2">
+                    <button
+                      onClick={handleReset}
+                      className="text-primary hover:text-primary/80 underline underline-offset-4 text-sm transition-colors"
+                    >
+                      ← Analyze another message
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
 
         {/* Footer */}
         <footer className="text-center mt-16 text-sm text-muted-foreground">
           <p>Microsoft Imagine Cup 2026 • GenStar MVP Demo</p>
           <p className="text-xs mt-2 opacity-70">
-          This is a demo. Connect to Azure services for full functionality.
-        </p>
-      </footer>
-    </main>
-    
-    <ChatBot />
-  </div>
+            This is a demo. Connect to Azure services for full functionality.
+          </p>
+        </footer>
+      </main>
+
+      <ChatBot />
+    </div>
   );
 };
 
