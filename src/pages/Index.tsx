@@ -267,13 +267,6 @@ const Index = () => {
           </>
         )}
 
-        {/* Footer */}
-        <footer className="text-center mt-16 text-sm text-muted-foreground">
-          <p>Microsoft Imagine Cup 2026 • GenStar MVP Demo</p>
-          <p className="text-xs mt-2 opacity-70">
-            This is a demo. Connect to Azure services for full functionality.
-          </p>
-        </footer>
       </main>
 
       <ChatBot />
