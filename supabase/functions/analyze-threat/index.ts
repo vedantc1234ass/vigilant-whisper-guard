@@ -353,6 +353,17 @@ Analyze this content thoroughly and return your threat assessment as JSON. Be EX
       };
     }
     
+    // Ensure ai_image_analysis exists
+    if (!analysisResult.ai_image_analysis) {
+      analysisResult.ai_image_analysis = {
+        is_ai_generated: null,
+        ai_confidence: 0,
+        ai_generator_suspected: null,
+        artifacts_found: [],
+        assessment: hasImage ? "Analysis pending" : "No image provided"
+      };
+    }
+    
     // Ensure link_analysis exists
     if (!analysisResult.link_analysis) {
       analysisResult.link_analysis = {
