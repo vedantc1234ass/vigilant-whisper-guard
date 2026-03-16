@@ -1,8 +1,9 @@
-import { Brain, ChevronDown, ChevronUp, Lightbulb, ShieldAlert, CheckCircle, ListChecks, Link, User } from "lucide-react";
+import { Brain, ChevronDown, ChevronUp, Lightbulb, ShieldAlert, CheckCircle, ListChecks, Link, User, ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
 import EvidenceItem from "./EvidenceItem";
+import AIImageAnalysis from "./AIImageAnalysis";
 import type { AnalysisResultData } from "./AnalysisResult";
 
 interface AIExplanationPanelProps {
