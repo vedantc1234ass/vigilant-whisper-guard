@@ -19,6 +19,14 @@ interface LinkAnalysis {
   typosquatting_detected: boolean;
 }
 
+interface AIImageAnalysisResult {
+  is_ai_generated: "ai_generated" | "likely_ai" | "likely_real" | "real" | "manipulated" | null;
+  ai_confidence: number;
+  ai_generator_suspected: string | null;
+  artifacts_found: string[];
+  assessment: string;
+}
+
 interface AnalysisResultData {
   product: string;
   used_services: string[];
@@ -33,6 +41,7 @@ interface AnalysisResultData {
     reason: string;
     confidence: number;
   }>;
+  ai_image_analysis?: AIImageAnalysisResult;
   deepfake_analysis?: DeepfakeAnalysis;
   link_analysis?: LinkAnalysis;
   meta: {
