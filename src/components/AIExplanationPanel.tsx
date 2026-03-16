@@ -1,8 +1,9 @@
-import { Brain, ChevronDown, ChevronUp, Lightbulb, ShieldAlert, CheckCircle, ListChecks, Link, User } from "lucide-react";
+import { Brain, ChevronDown, ChevronUp, Lightbulb, ShieldAlert, CheckCircle, ListChecks, Link, User, ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "./ui/badge";
 import EvidenceItem from "./EvidenceItem";
+import AIImageAnalysis from "./AIImageAnalysis";
 import type { AnalysisResultData } from "./AnalysisResult";
 
 interface AIExplanationPanelProps {
@@ -28,9 +29,15 @@ const AIExplanationPanel = ({ data }: AIExplanationPanelProps) => {
   const hasLinks =
     data.link_analysis &&
     (data.link_analysis.urls_found.length > 0 || data.link_analysis.suspicious_urls.length > 0);
+  const hasAIImage = data.ai_image_analysis?.is_ai_generated !== null && data.ai_image_analysis?.is_ai_generated !== undefined;
 
   return (
     <div className="space-y-3">
+      {/* AI Image Analysis - Show prominently at top when image was analyzed */}
+      {hasAIImage && data.ai_image_analysis && (
+        <AIImageAnalysis data={data.ai_image_analysis} />
+      )}
+
       {/* Why This Is Risky */}
       <Section
         icon={<Brain className="w-4 h-4 text-warning" />}
