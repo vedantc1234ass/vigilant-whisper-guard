@@ -213,7 +213,7 @@ ${text || "[No text provided]"}
 Channel: ${channel}
 ${mediaContext}
 
-${hasImage ? "🔍 IMAGE ANALYSIS REQUIRED: Look for deepfake artifacts, unnatural facial features, GAN patterns, lighting inconsistencies. Tell me if the person is REAL or FAKE." : ""}
+${hasImage ? "🔍 IMAGE ANALYSIS REQUIRED: First determine if this image is AI-GENERATED or a REAL photograph. Look for GAN/diffusion artifacts, unnatural textures, warped details, too-perfect symmetry. Then if it contains a person, also check for deepfake signs. Give a CLEAR verdict: AI-GENERATED or REAL." : ""}
 ${hasAudio ? "🔍 AUDIO ANALYSIS REQUIRED: Listen for voice cloning artifacts, synthetic speech patterns, unnatural cadence. Tell me if the voice is REAL or AI-GENERATED." : ""}
 ${hasVideo ? "🔍 VIDEO ANALYSIS REQUIRED: Check for lip-sync issues, facial warping, temporal inconsistencies. Tell me if the person is REAL or DEEPFAKE." : ""}
 ${extractedUrls.length > 0 ? `🔍 LINK ANALYSIS REQUIRED: Check these URLs for phishing attempts: ${extractedUrls.join(", ")}` : ""}
