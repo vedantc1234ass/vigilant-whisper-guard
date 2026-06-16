@@ -1,5 +1,5 @@
 import { Scan, Brain, Eye, AudioLines, Cpu } from "lucide-react";
-import ShieldIcon from "./ShieldIcon";
+import Logo from "./Logo";
 
 interface LoadingStateProps {
   stage?: "scanning" | "analyzing" | "processing";
@@ -15,7 +15,7 @@ const LoadingState = ({ stage = "scanning" }: LoadingStateProps) => {
   return (
     <div className="glass-card rounded-2xl p-8 text-center fade-in">
       <div className="flex justify-center mb-6">
-        <ShieldIcon animated size={64} />
+        <Logo size={64} showText={false} interactive={false} className="shield-animated" />
       </div>
       
       <h3 className="text-xl font-semibold text-foreground mb-2">

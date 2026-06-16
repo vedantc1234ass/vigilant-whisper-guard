@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, X, Send, Bot, User, Loader2, Trash2, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Logo from "./Logo";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 
@@ -263,9 +264,7 @@ const ChatBot = () => {
         >
           {/* Header */}
           <div className="flex items-center gap-3 p-4 border-b border-border bg-card/80 backdrop-blur-sm">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-[hsl(187,80%,40%)] flex items-center justify-center shadow-[0_0_15px_hsla(187,100%,50%,0.3)]">
-              <Bot className="w-5 h-5 text-primary-foreground" />
-            </div>
+            <Logo size={40} showText={false} interactive={false} />
             <div className="flex-1">
               <h3 className="font-semibold text-foreground text-sm">GenStar AI Assistant</h3>
               <p className="text-xs text-muted-foreground">
