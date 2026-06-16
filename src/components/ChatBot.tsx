@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, X, Send, Bot, User, Loader2, Trash2, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Logo from "./Logo";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 
@@ -263,7 +264,7 @@ const ChatBot = () => {
         >
           {/* Header */}
           <div className="flex items-center gap-3 p-4 border-b border-border bg-card/80 backdrop-blur-sm">
-            <Logo size={40} showText={false} interactive={false} />>
+            <Logo size={40} showText={false} interactive={false} />
             <div className="flex-1">
               <h3 className="font-semibold text-foreground text-sm">GenStar AI Assistant</h3>
               <p className="text-xs text-muted-foreground">
