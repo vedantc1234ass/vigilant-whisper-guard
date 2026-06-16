@@ -9,7 +9,6 @@ import FoundryIntelligenceLayer from "@/components/FoundryIntelligenceLayer";
 import SecurityEvidencePanel from "@/components/SecurityEvidencePanel";
 import AdvancedRiskScoring from "@/components/AdvancedRiskScoring";
 import ThreatDashboard from "@/components/ThreatDashboard";
-import ShieldIcon from "@/components/ShieldIcon";
 import Logo from "@/components/Logo";
 import ChatBot from "@/components/ChatBot";
 import { Badge } from "@/components/ui/badge";
