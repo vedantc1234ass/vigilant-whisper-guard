@@ -27,15 +27,42 @@ interface AIImageAnalysisResult {
   assessment: string;
 }
 
+interface FoundryIntelligence {
+  knowledge_sources_retrieved: string[];
+  threat_intelligence_matched: string[];
+  security_patterns_found: string[];
+}
+
+interface ReasoningStep {
+  step: number;
+  title: string;
+  finding: string;
+  status: "clear" | "flagged" | "info";
+}
+
+interface SecurityIndicator {
+  indicator: string;
+  confidence: number;
+  severity: "Low" | "Medium" | "High" | "Critical";
+  reason: string;
+}
+
 interface AnalysisResultData {
   product: string;
   used_services: string[];
   risk_label: "Low" | "Medium" | "High" | "Inconclusive";
   risk_score: number;
+  risk_category?: "Safe" | "Low Risk" | "Medium Risk" | "High Risk" | "Critical Risk";
+  confidence_score?: number;
+  fraud_likelihood?: number;
+  severity_level?: "None" | "Low" | "Medium" | "High" | "Critical";
   manipulation_tags: string[];
   explanation: string;
   safe_rewrite: string;
   next_actions: string[];
+  foundry_intelligence?: FoundryIntelligence;
+  reasoning_steps?: ReasoningStep[];
+  security_indicators?: SecurityIndicator[];
   evidence: Array<{
     source: "text" | "vision" | "speech" | "ml" | "link";
     reason: string;
