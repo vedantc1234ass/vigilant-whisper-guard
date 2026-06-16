@@ -14,7 +14,7 @@ interface DeepfakeAnalysis {
 
 interface LinkAnalysis {
   urls_found: string[];
-  suspicious_urls: string[];
+  suspicious_urls: (string | { url: string; reason?: string; severity?: string })[];
   brand_impersonation: boolean;
   typosquatting_detected: boolean;
 }
