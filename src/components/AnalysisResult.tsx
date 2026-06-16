@@ -250,11 +250,16 @@ const AnalysisResult = ({ data }: AnalysisResultProps) => {
               <div>
                 <p className="text-sm text-destructive font-semibold mb-2">⚠️ Suspicious URLs:</p>
                 <div className="space-y-2">
-                  {data.link_analysis.suspicious_urls.map((url, i) => (
-                    <div key={i} className="bg-destructive/10 border border-destructive/30 rounded-lg p-2 text-sm text-destructive break-all">
-                      {url}
-                    </div>
-                  ))}
+                  {data.link_analysis.suspicious_urls.map((item, i) => {
+                    const url = typeof item === "string" ? item : (item as any)?.url;
+                    const reason = typeof item === "string" ? null : (item as any)?.reason;
+                    return (
+                      <div key={i} className="bg-destructive/10 border border-destructive/30 rounded-lg p-2 text-sm text-destructive break-all">
+                        {url}
+                        {reason && <span className="block text-xs text-destructive/70 mt-1">{reason}</span>}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

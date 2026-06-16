@@ -170,14 +170,19 @@ const AIExplanationPanel = ({ data }: AIExplanationPanelProps) => {
                 ⚠️ Suspicious URLs
               </p>
               <div className="space-y-1.5">
-                {data.link_analysis.suspicious_urls.map((url, i) => (
-                  <div
-                    key={i}
-                    className="bg-destructive/5 rounded-md p-2 text-xs text-destructive border border-destructive/20 break-all"
-                  >
-                    {url}
-                  </div>
-                ))}
+                {data.link_analysis.suspicious_urls.map((item, i) => {
+                  const url = typeof item === "string" ? item : item?.url;
+                  const reason = typeof item === "string" ? null : item?.reason;
+                  return (
+                    <div
+                      key={i}
+                      className="bg-destructive/5 rounded-md p-2 text-xs text-destructive border border-destructive/20 break-all"
+                    >
+                      {url}
+                      {reason && <span className="block text-[10px] text-destructive/70 mt-0.5">{reason}</span>}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
