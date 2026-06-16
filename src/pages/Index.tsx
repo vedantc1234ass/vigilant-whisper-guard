@@ -253,6 +253,30 @@ const Index = () => {
                     </div>
                   </div>
 
+                  {/* Advanced Risk Scoring */}
+                  <AdvancedRiskScoring
+                    riskScore={result.risk_score}
+                    riskCategory={result.risk_category}
+                    confidenceScore={result.confidence_score}
+                    fraudLikelihood={result.fraud_likelihood}
+                    severityLevel={result.severity_level}
+                  />
+
+                  {/* Foundry Intelligence Layer (Grounded Retrieval) */}
+                  {result.foundry_intelligence && (
+                    <FoundryIntelligenceLayer data={result.foundry_intelligence} />
+                  )}
+
+                  {/* Multi-Step AI Reasoning Engine */}
+                  {result.reasoning_steps && result.reasoning_steps.length > 0 && (
+                    <ReasoningWorkflow steps={result.reasoning_steps} />
+                  )}
+
+                  {/* Security Evidence Panel */}
+                  {result.security_indicators && result.security_indicators.length > 0 && (
+                    <SecurityEvidencePanel indicators={result.security_indicators} />
+                  )}
+
                   {/* AI Explanation Panel */}
                   <AIExplanationPanel data={result} />
 
