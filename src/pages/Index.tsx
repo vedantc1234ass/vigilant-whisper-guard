@@ -10,6 +10,7 @@ import SecurityEvidencePanel from "@/components/SecurityEvidencePanel";
 import AdvancedRiskScoring from "@/components/AdvancedRiskScoring";
 import ThreatDashboard from "@/components/ThreatDashboard";
 import ShieldIcon from "@/components/ShieldIcon";
+import Logo from "@/components/Logo";
 import ChatBot from "@/components/ChatBot";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -169,7 +170,7 @@ const Index = () => {
             {!result && !isLoading && (
               <div className="text-center mb-10 fade-in">
                 <div className="flex justify-center mb-5">
-                  <ShieldIcon animated size={72} />
+                  <Logo size={72} showText={false} className="shield-animated" />
                 </div>
                 <p className="text-xs font-semibold tracking-[0.3em] text-cyan-400 uppercase mb-2">
                   GenStar · CyberShield AI Agent
