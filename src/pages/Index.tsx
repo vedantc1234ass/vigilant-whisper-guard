@@ -171,25 +171,28 @@ const Index = () => {
                 <div className="flex justify-center mb-5">
                   <ShieldIcon animated size={72} />
                 </div>
+                <p className="text-xs font-semibold tracking-[0.3em] text-cyan-400 uppercase mb-2">
+                  GenStar · CyberShield AI Agent
+                </p>
                 <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-3 tracking-tight">
-                  AI-Powered Threat Detection
+                  AI-Powered Defense Against Digital Threats
                 </h1>
                 <p className="text-base text-muted-foreground max-w-2xl mx-auto mb-5">
-                  Detect targeted phishing, social engineering, and deepfake impersonation
-                  with advanced AI analysis.
+                  An agentic cybersecurity reasoning agent that detects phishing, scams, suspicious links,
+                  deepfakes, synthetic voices, and manipulated media — with grounded, explainable AI reasoning.
                 </p>
                 <div className="flex flex-wrap justify-center gap-2">
                   <Badge variant="outline" className="border-primary/30 text-primary bg-primary/5 px-3 py-1">
-                    <Sparkles className="w-3 h-3 mr-1" /> AI Analysis
+                    <Sparkles className="w-3 h-3 mr-1" /> Agentic AI
                   </Badge>
                   <Badge variant="outline" className="border-cyan-400/30 text-cyan-400 bg-cyan-400/5 px-3 py-1">
-                    <Eye className="w-3 h-3 mr-1" /> Vision AI
+                    <Eye className="w-3 h-3 mr-1" /> Foundry IQ
                   </Badge>
                   <Badge variant="outline" className="border-violet-400/30 text-violet-400 bg-violet-400/5 px-3 py-1">
-                    <Zap className="w-3 h-3 mr-1" /> Speech AI
+                    <Zap className="w-3 h-3 mr-1" /> Explainable AI
                   </Badge>
                   <Badge variant="outline" className="border-emerald-400/30 text-emerald-400 bg-emerald-400/5 px-3 py-1">
-                    <Shield className="w-3 h-3 mr-1" /> ML Scoring
+                    <Shield className="w-3 h-3 mr-1" /> Threat Intelligence
                   </Badge>
                 </div>
               </div>
