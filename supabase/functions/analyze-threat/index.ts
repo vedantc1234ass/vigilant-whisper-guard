@@ -441,6 +441,7 @@ Analyze this content thoroughly and return your threat assessment as JSON. Be EX
         score >= 85 ? "Critical" : score >= 65 ? "High" : score >= 40 ? "Medium" : score >= 20 ? "Low" : "None";
     }
 
+    return new Response(JSON.stringify(analysisResult), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
